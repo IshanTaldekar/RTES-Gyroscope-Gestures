@@ -90,7 +90,7 @@ bool user_profile_locked_flag = false;  // when true, user profile cannot be cha
 
 const int32_t SENSING_DURATION = 100;  // number of seconds that gyroscope will sense gesture: 100 -> 5 seconds, 200 -> 10 seconds, ...
 const int32_t STABILITY_DURATION = 5;  // timeframe after which stability of measurement in any axis is gauged + compared about these values
-const float STABILITY_THRESHOLD = 5;  // upper bound on the change in degree a value under which is considered to be holding stable
+const float STABILITY_THRESHOLD = 15;  // upper bound on the change in degree a value under which is considered to be holding stable
 const int32_t COMPARE_THRESHOLD = 30;  // the difference in degrees around the actual value of measurement that still register as a match
 const float DELTA_THRESHOLD = 10;  // amount of change in angle required for an major change along an axis is registered
 const float SENSOR_DRIFT_FILTER_THRESHOLD = 0.15;  // upper-bound measurement value which is attributed to sensor drift
@@ -140,7 +140,7 @@ struct Gesture {  // container for recording gesture as a sequence of movements 
 
 };
 
-int8_t current_user_profile = 4;  // the current user profile selected using the UI: 4 --> user profile 1, 0 --> user profile 5
+int16_t current_user_profile = 4;  // the current user profile selected using the UI: 4 --> user profile 1, 0 --> user profile 5
 
 Gesture recorded_gestures[5];  // gestures stored with the index corresponding to the user profile
 
@@ -203,7 +203,7 @@ bool compareAxisChange(float angle_delta, bool positive_delta[SENSING_DURATION],
  * @author Ishan Taldekar
  */
 void registerGestureSegment(DeviceMode current_mode, MovementAxis movement_axis, float delta, bool &gesture_match) {
-
+  
   if (current_mode == DeviceMode::RECORD) {  // record the current gesture segment (axis and magnitude of change of rotation)
 
     recorded_gestures[current_user_profile].axis[recorded_gestures[current_user_profile].next_index] = movement_axis;
@@ -263,7 +263,7 @@ void processNewMeasurements(DeviceMode current_mode, bool &gesture_match) {
     if (abs(data.delta_y) >= abs(data.delta_x) && abs(data.delta_y) >= abs(data.delta_z)) {  // is the change in the current axis larger than the change in the other two axes?
 
       registerGestureSegment(current_mode, MovementAxis::Y, data.delta_y, gesture_match);
-      
+
     }
 
   }
@@ -273,7 +273,7 @@ void processNewMeasurements(DeviceMode current_mode, bool &gesture_match) {
     if (abs(data.delta_z) >= abs(data.delta_x) && abs(data.delta_z) >= abs(data.delta_y)) {  // is the change in the current axis larger than the change in the other two axes?
 
       registerGestureSegment(current_mode, MovementAxis::Z, data.delta_z, gesture_match);
-      
+       
     }
 
   }
@@ -407,7 +407,9 @@ bool senseAndProcessGesture(DeviceMode current_mode) {
     
   }
 
-  if (gesture_match[recorded_gestures].next_index != recorded_gestures[current_user_profile].compare_index) gesture_match = false;
+  std::cout << recorded_gestures[current_user_profile].next_index << "," << recorded_gestures[current_user_profile].compare_index << std::endl;
+ 
+  if (recorded_gestures[current_user_profile].next_index != recorded_gestures[current_user_profile].compare_index) gesture_match = false;
 
   return gesture_match;
 
